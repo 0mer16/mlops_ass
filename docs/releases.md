@@ -20,6 +20,10 @@ The two releases:
 | `v1.0.0` | `8c371d2` (merge of PR #1) | [34510352772](https://github.com/0mer16/mlops_ass/actions/runs/34510352772) | `1.0.0`, `latest` |
 | `v1.1.0` | `7bd02d1` (merge of PR #3) | [34512270201](https://github.com/0mer16/mlops_ass/actions/runs/34512270201) | `1.1.0`, `latest`, `7bd02d1` |
 
+![The v1.1.0 release run](screenshots/05-release-v1.1.0-run.png)
+
+(This was captured while signed out, so the summary table from the last step isn't shown. The same values are in the traceability section below.)
+
 `v1.0.0` didn't get a sha tag or OCI labels because I only added those in PR #2, after 1.0.0 was already out. I didn't re-release 1.0.0 to add them, because then `1.0.0` would point at a different image than before, and the whole point is that a version always means the same image.
 
 ## What's in the registry (Parts 16 and 19)
@@ -34,6 +38,10 @@ Package: `ghcr.io/0mer16/student-ml-api` (public). The digest of each tag, strai
 | `7bd02d1` | `sha256:68434cb0cb94f46b69f3d6fff059270e5806fe8df31373c60c3a47afddd537e3` |
 
 I got these by asking the registry directly (`GET /v2/0mer16/student-ml-api/tags/list`, then the `Docker-Content-Digest` header for each tag). They match the `digest:` lines that `docker push` printed in the release logs.
+
+The package page shows the same thing. `latest`, `7bd02d1` and `1.1.0` are grouped as one image version, and `1.0.0` is separate:
+
+![GHCR package page with the tagged versions](screenshots/06-ghcr-package-versions.png)
 
 So `latest` → `1.1.0` (same digest), and `1.0.0` is still there with the same digest it had when it was first pushed. Before `v1.1.0`, `latest` had the `1.0.0` digest. It moved when 1.1.0 was released.
 
