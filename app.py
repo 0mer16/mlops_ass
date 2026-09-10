@@ -17,6 +17,11 @@ def read_version():
 
 APP_VERSION = read_version()
 
+# the model has its own version, separate from the app version. in a real
+# setup they change for different reasons (new code vs retrained model),
+# so /health reports both
+MODEL_VERSION = "model-1"
+
 app = Flask(__name__)
 
 
@@ -31,7 +36,8 @@ def health():
     return jsonify(
         status="healthy",
         application=APP_NAME,
-        version=APP_VERSION,
+        application_version=APP_VERSION,
+        model_version=MODEL_VERSION,
     )
 
 

@@ -4,11 +4,18 @@ This is a small Flask API I built for the MLOps assignment. The "model" is just 
 
 ## Endpoints
 
-`GET /health` tells you the app is up and which version is running:
+`GET /health` tells you the app is up and which versions are running:
 
 ```json
-{"status": "healthy", "application": "student-ml-api", "version": "1.0.0"}
+{
+  "status": "healthy",
+  "application": "student-ml-api",
+  "application_version": "1.1.0",
+  "model_version": "model-1"
+}
 ```
+
+Up to 1.0.0 this just had a single `version` field. In 1.1.0 I split it into `application_version` (the code) and `model_version` (the model). In a real ML service those change separately: you can retrain the model without touching the code, or change the code and keep the same model. With one field you couldn't tell which of the two had changed.
 
 `POST /predict` takes a number and returns the prediction:
 
@@ -22,7 +29,7 @@ curl -X POST http://localhost:5000/predict -H "Content-Type: application/json" -
 
 If `value` is missing, or isn't a number (a string, null, true/false, a list), you get a 400 with an `error` message instead of a crash.
 
-The version shown in `/health` is read from the `VERSION` file, so that file is the only thing that needs changing when I bump the version.
+The `application_version` in `/health` is read from the `VERSION` file, so that file is the only thing that needs changing when I bump the version.
 
 ## Running it locally
 
