@@ -1,7 +1,21 @@
+from pathlib import Path
+
 from flask import Flask, jsonify
 
 APP_NAME = "student-ml-api"
-APP_VERSION = "1.0.0"
+VERSION_FILE = Path(__file__).parent / "VERSION"
+
+
+def read_version():
+    # the VERSION file is the one place the app version is kept,
+    # so a release only needs that file bumped
+    try:
+        return VERSION_FILE.read_text().strip()
+    except FileNotFoundError:
+        return "unknown"
+
+
+APP_VERSION = read_version()
 
 app = Flask(__name__)
 
