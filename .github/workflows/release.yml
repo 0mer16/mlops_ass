@@ -1,0 +1,70 @@
+name: Release
+
+# only runs when a version tag like v1.0.0 is pushed. this is the only
+# workflow that pushes images to the registry
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run unit tests
+        run: pytest -v
+
+      # v1.0.0 -> 1.0.0, taken from the tag itself so nothing is hard-coded.
+      # registry paths have to be lowercase, hence the ,,
+      - name: Get version from tag
+        run: |
+          echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+          echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/student-ml-api" >> "$GITHUB_ENV"
+
+      # stops a v1.1.0 tag from shipping an app that still says 1.0.0
+      - name: Check tag matches VERSION file
+        run: |
+          FILE_VERSION="$(cat VERSION)"
+          if [ "$VERSION" != "$FILE_VERSION" ]; then
+            echo "Tag says $VERSION but VERSION file says $FILE_VERSION"
+            exit 1
+          fi
+          echo "Releasing version $VERSION"
+
+      # GITHUB_TOKEN is created by actions for each run, so no password
+      # or personal token is stored anywhere in the repo
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: docker build -t student-ml-api:$VERSION .
+
+      - name: Apply version tags
+        run: |
+          docker tag student-ml-api:$VERSION $IMAGE:$VERSION
+          docker tag student-ml-api:$VERSION $IMAGE:latest
+
+      - name: Push Docker image
+        run: |
+          docker push $IMAGE:$VERSION
+          docker push $IMAGE:latest
