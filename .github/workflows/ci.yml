@@ -1,0 +1,56 @@
+name: CI
+
+# runs on every PR into main. it only tests and checks that the image
+# builds, nothing gets pushed to the registry from here
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run unit tests
+        run: pytest -v
+
+  docker-build:
+    runs-on: ubuntu-latest
+    # no point building the image if the tests already failed
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Build image (not pushed)
+        run: docker build -t student-ml-api:ci-${{ github.sha }} .
+
+      - name: Run container and check /health
+        run: |
+          docker run -d --name ci-check -p 5000:5000 student-ml-api:ci-${{ github.sha }}
+          for i in $(seq 1 10); do
+            if curl -fsS http://localhost:5000/health; then
+              echo
+              echo "container is up"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "health check never passed, container logs:"
+          docker logs ci-check
+          exit 1
