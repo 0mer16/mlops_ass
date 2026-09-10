@@ -36,7 +36,7 @@ def health():
     return jsonify(
         status="healthy",
         application=APP_NAME,
-        version=APP_VERSION,
+        application_version=APP_VERSION,
         model_version=MODEL_VERSION,
     )
 

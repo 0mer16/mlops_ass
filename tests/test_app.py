@@ -17,7 +17,9 @@ def test_health(client):
     data = response.get_json()
     assert data["status"] == "healthy"
     assert data["application"] == "student-ml-api"
-    assert data["version"] == "1.0.0"
+    assert data["application_version"] == "1.0.0"
+    # the old field name is gone now that there are two versions
+    assert "version" not in data
 
 
 def test_health_reports_model_version(client):
