@@ -20,6 +20,11 @@ def test_health(client):
     assert data["version"] == "1.0.0"
 
 
+def test_health_reports_model_version(client):
+    data = client.get("/health").get_json()
+    assert data["model_version"] == "model-1"
+
+
 def test_predict_success(client):
     response = client.post("/predict", json={"value": 10})
     assert response.status_code == 200
