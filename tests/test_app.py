@@ -15,7 +15,7 @@ def test_health(client):
     assert response.status_code == 200
 
     data = response.get_json()
-    assert data["status"] == "wrong"
+    assert data["status"] == "healthy"
     assert data["application"] == "student-ml-api"
     assert data["version"] == "1.0.0"
 
