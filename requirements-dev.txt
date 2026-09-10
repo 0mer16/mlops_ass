@@ -1,0 +1,3 @@
+# runtime deps + test tools. kept separate so pytest doesn't end up in the docker image
+-r requirements.txt
+pytest==9.1.1
