@@ -36,6 +36,7 @@ jobs:
         run: |
           echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
           echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/student-ml-api" >> "$GITHUB_ENV"
+          echo "SHORT_SHA=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
 
       # stops a v1.1.0 tag from shipping an app that still says 1.0.0
       - name: Check tag matches VERSION file
@@ -65,12 +66,16 @@ jobs:
             --build-arg BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) \
             -t student-ml-api:$VERSION .
 
+      # the short sha tag never moves, unlike latest, so it always points
+      # at the image built from that exact commit
       - name: Apply version tags
         run: |
           docker tag student-ml-api:$VERSION $IMAGE:$VERSION
           docker tag student-ml-api:$VERSION $IMAGE:latest
+          docker tag student-ml-api:$VERSION $IMAGE:$SHORT_SHA
 
       - name: Push Docker image
         run: |
           docker push $IMAGE:$VERSION
           docker push $IMAGE:latest
+          docker push $IMAGE:$SHORT_SHA
