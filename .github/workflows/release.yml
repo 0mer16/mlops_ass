@@ -79,3 +79,19 @@ jobs:
           docker push $IMAGE:$VERSION
           docker push $IMAGE:latest
           docker push $IMAGE:$SHORT_SHA
+
+      # shows up on the run page, so tag -> commit -> image -> digest
+      # is all in one place
+      - name: Write release summary
+        run: |
+          DIGEST=$(docker inspect --format '{{index .RepoDigests 0}}' $IMAGE:$VERSION)
+          {
+            echo "## Released $IMAGE:$VERSION"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Git tag | \`$GITHUB_REF_NAME\` |"
+            echo "| Commit | \`$GITHUB_SHA\` |"
+            echo "| Image tags | \`$VERSION\`, \`latest\`, \`$SHORT_SHA\` |"
+            echo "| Digest | \`${DIGEST#*@}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
