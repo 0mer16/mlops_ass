@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 
 APP_NAME = "student-ml-api"
 VERSION_FILE = Path(__file__).parent / "VERSION"
@@ -20,6 +20,12 @@ APP_VERSION = read_version()
 app = Flask(__name__)
 
 
+def predict(value):
+    # placeholder "model", it just doubles the input.
+    # the assignment is about the pipeline, not the model
+    return value * 2
+
+
 @app.get("/health")
 def health():
     return jsonify(
@@ -27,6 +33,13 @@ def health():
         application=APP_NAME,
         version=APP_VERSION,
     )
+
+
+@app.post("/predict")
+def predict_endpoint():
+    data = request.get_json()
+    value = data["value"]
+    return jsonify(input=value, prediction=predict(value))
 
 
 if __name__ == "__main__":
