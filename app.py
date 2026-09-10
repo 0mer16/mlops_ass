@@ -37,8 +37,17 @@ def health():
 
 @app.post("/predict")
 def predict_endpoint():
-    data = request.get_json()
+    # silent=True gives None instead of raising when the body isn't json
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or "value" not in data:
+        return jsonify(error="request body must be json with a 'value' field"), 400
+
     value = data["value"]
+    # bool is a subclass of int in python, so True would pass the
+    # number check below without this
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return jsonify(error="'value' must be a number"), 400
+
     return jsonify(input=value, prediction=predict(value))
 
 
