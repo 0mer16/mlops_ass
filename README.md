@@ -63,3 +63,31 @@ Some notes on the Dockerfile:
 ## How changes get in
 
 Nothing gets committed straight to `main`. Every change goes on a `feature/...` branch and gets a pull request, and the CI workflow (`.github/workflows/ci.yml`) runs on the PR. It runs the tests, then builds the Docker image and checks `/health` on a running container. The image is only built there, never pushed.
+
+`main` is protected, so a PR can't be merged until both CI jobs (`test` and `docker-build`) have passed. There's also a PR template (`.github/pull_request_template.md`) so every PR has the same sections.
+
+## Releases
+
+Images only get published when I push a version tag on `main`:
+
+```bash
+git checkout main
+git pull
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+That triggers `.github/workflows/release.yml`, which:
+
+1. runs the tests again
+2. strips the `v` from the tag to get the version (`v1.0.0` becomes `1.0.0`), so the version isn't typed anywhere in the workflow
+3. checks that the tag matches the `VERSION` file and stops if it doesn't
+4. logs in to GitHub Container Registry with the `GITHUB_TOKEN` that Actions gives each run, so no password is stored in the repo
+5. builds the image, tags it with the version and `latest`, and pushes both
+
+The image ends up at `ghcr.io/0mer16/student-ml-api`, so anyone can run a specific version without cloning the repo:
+
+```bash
+docker pull ghcr.io/0mer16/student-ml-api:1.0.0
+docker run -d --name student-ml-api -p 5000:5000 ghcr.io/0mer16/student-ml-api:1.0.0
+```
