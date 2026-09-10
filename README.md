@@ -114,3 +114,22 @@ So even if someone only has the image, they can see which commit built it. A loc
 The sha tag does the same job from the other side. `latest` moves every time there's a release, and in theory a version tag could be pushed again, but the sha tag only ever points at the image built from that one commit. If I'm looking at a commit in the git history and want the exact image for it, I can pull `student-ml-api:<short sha>` without having to work out which version it went into.
 
 The labels are at the bottom of the Dockerfile on purpose. The commit and date change on every build, and Docker rebuilds every step after the first one that changes, so putting them at the top would throw away the cached pip install every time.
+
+## Rolling back
+
+If a release has a problem, go back to the previous image. No code change or rebuild needed:
+
+```bash
+docker stop student-ml-api
+docker container remove student-ml-api
+docker run -d --name student-ml-api -p 5000:5000 ghcr.io/0mer16/student-ml-api:1.0.0
+```
+
+## Assignment write-ups
+
+The notes and evidence for each part of the assignment are in `docs/`:
+
+- [docs/git-workflow.md](docs/git-workflow.md): how PRs got into `main`, the CI failure I caused on purpose, branch protection settings, merge strategy, and why CI and release are separate
+- [docs/docker.md](docs/docker.md): local build and run, `docker inspect` / `logs` / `exec` output, and the build cache experiment
+- [docs/releases.md](docs/releases.md): the two releases, registry tags and digests, pulling instead of rebuilding, rollback, and the full traceability chain for 1.1.0
+- [docs/failure-analysis.md](docs/failure-analysis.md): four problems I reproduced on purpose (plus one I didn't), with symptom, cause, evidence and fix
