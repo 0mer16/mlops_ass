@@ -56,8 +56,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # version, commit and build time get baked into the image as OCI labels
       - name: Build Docker image
-        run: docker build -t student-ml-api:$VERSION .
+        run: |
+          docker build \
+            --build-arg APP_VERSION=$VERSION \
+            --build-arg GIT_COMMIT=$GITHUB_SHA \
+            --build-arg BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) \
+            -t student-ml-api:$VERSION .
 
       - name: Apply version tags
         run: |
