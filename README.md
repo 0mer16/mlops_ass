@@ -83,7 +83,9 @@ That triggers `.github/workflows/release.yml`, which:
 2. strips the `v` from the tag to get the version (`v1.0.0` becomes `1.0.0`), so the version isn't typed anywhere in the workflow
 3. checks that the tag matches the `VERSION` file and stops if it doesn't
 4. logs in to GitHub Container Registry with the `GITHUB_TOKEN` that Actions gives each run, so no password is stored in the repo
-5. builds the image, tags it with the version and `latest`, and pushes both
+5. builds the image with the version, commit and build date passed in as build args
+6. tags it three ways (the version, `latest`, and the short commit sha, like `8c371d2`) and pushes all three
+7. writes the tag, commit and image digest to the run's summary page
 
 The image ends up at `ghcr.io/0mer16/student-ml-api`, so anyone can run a specific version without cloning the repo:
 
@@ -91,3 +93,17 @@ The image ends up at `ghcr.io/0mer16/student-ml-api`, so anyone can run a specif
 docker pull ghcr.io/0mer16/student-ml-api:1.0.0
 docker run -d --name student-ml-api -p 5000:5000 ghcr.io/0mer16/student-ml-api:1.0.0
 ```
+
+### Finding out where an image came from
+
+Each release image has OCI labels with the version, the full commit sha, the build date and the repo URL:
+
+```bash
+docker image inspect --format "{{json .Config.Labels}}" ghcr.io/0mer16/student-ml-api:1.1.0
+```
+
+So even if someone only has the image, they can see which commit built it. A local `docker build` without the build args just gets `dev` and `unknown` in those labels, so you can tell it apart from a real release.
+
+The sha tag does the same job from the other side. `latest` moves every time there's a release, and in theory a version tag could be pushed again, but the sha tag only ever points at the image built from that one commit. If I'm looking at a commit in the git history and want the exact image for it, I can pull `student-ml-api:<short sha>` without having to work out which version it went into.
+
+The labels are at the bottom of the Dockerfile on purpose. The commit and date change on every build, and Docker rebuilds every step after the first one that changes, so putting them at the top would throw away the cached pip install every time.
