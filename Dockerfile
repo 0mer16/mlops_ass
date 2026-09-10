@@ -28,6 +28,20 @@ EXPOSE 5000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')" || exit 1
 
+# build info passed in with --build-arg by the release workflow, so the
+# image itself says which version and commit it came from.
+# these are at the end on purpose: the commit and date change on every
+# build, and anything after them would lose the layer cache
+ARG APP_VERSION=dev
+ARG GIT_COMMIT=unknown
+ARG BUILD_DATE=unknown
+
+LABEL org.opencontainers.image.title="student-ml-api" \
+      org.opencontainers.image.description="Simple prediction API for the MLOps assignment" \
+      org.opencontainers.image.version="${APP_VERSION}" \
+      org.opencontainers.image.revision="${GIT_COMMIT}" \
+      org.opencontainers.image.created="${BUILD_DATE}"
+
 # gunicorn instead of the flask dev server. has to bind 0.0.0.0,
 # 127.0.0.1 would only be reachable from inside the container
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--access-logfile", "-", "app:app"]
